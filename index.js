@@ -66,6 +66,15 @@ async function loadSavedCredentialsIfExist(userId) {
  */
 async function saveCredentials(client, userId) {
   const content = await fsPromise.readFile(CREDENTIALS_PATH);
+  if(client.credentials.refresh_token === undefined){
+    oauth2Client.on('tokens', (tokens) => {
+      if(tokens.refresh_token) {
+        // store the refresh_token in my database!
+        console.log(tokens.refresh_token);
+      }
+      console.log(tokens.access_token);
+    });
+  }
   const keys = JSON.parse(content);
   const key = keys.installed || keys.web;
   const payload = JSON.stringify({
