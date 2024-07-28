@@ -4,6 +4,7 @@
   "description": "A Google Meet authenticator and Link generator for Mattermost",
   "main": "index.js",
   "scripts": {
+    "start": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -15,6 +16,12 @@
   "dependencies": {
     "@google-apps/meet": "^0.3.0",
     "@google-cloud/local-auth": "^2.1.0",
-    "express": "^4.19.2"
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "googleapis": "^140.0.1",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
   }
 }
