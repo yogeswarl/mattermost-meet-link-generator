@@ -8,8 +8,10 @@ const { google } = require('googleapis');
 const { SpacesServiceClient } = require('@google-apps/meet').v2;
 const { auth } = require('google-auth-library');
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+const serverless = require('serverless-http')
 const app = express();
 const PORT = process.env.PORT || 3000;
+
 dotenv.config();
 
 // general
@@ -69,10 +71,8 @@ async function saveCredentials(client, userId) {
   if(client.credentials.refresh_token === undefined){
     oauth2Client.on('tokens', (tokens) => {
       if(tokens.refresh_token) {
-        // store the refresh_token in my database!
-        console.log(tokens.refresh_token);
+        client.credentials.refresh_token = tokens.refresh_token;
       }
-      console.log(tokens.access_token);
     });
   }
   const keys = JSON.parse(content);
@@ -160,7 +160,6 @@ app.get('/create-space', async (req, res) => {
 
 app.post('/meet-register', async (req, res) => {
   const { user_id, token, user_name, response_url } = req.body
-  console.log('POST called')
   if (!await verifyMMToken(token, tokenTypeToTokenMap.REGISTER)) {
     res.status(403).send({ "username": BOT_NAME, "text": "Invalid token provided, you outsider" });
     return;
@@ -195,8 +194,21 @@ app.get('/auth/google/callback', async (req, res) => {
   }
 });
 app.get('/', (req, res) => {
-  res.send('Hello World');
+  res.send('Hello From Meet Generator');
 })
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+
+const handler = serverless(app);
+/*
+Uncomment this part to run the server locally
+*/
+// app.listen(PORT, () => {
+//   console.log(`Server is running on port ${PORT}`);
+// });
+
+/*
+Use this part for running the server on AWS Lambda
+*/
+module.exports.handler = async (event, context) => {
+  context.callbackWaitsForEmptyEventLoop = false;
+  return await handler(event, context);
+};

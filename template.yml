@@ -1,0 +1,32 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: An AWS Serverless Specification template describing your function.
+Resources:
+  AppLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      MemorySize: 1024
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Timeout: 10
+      Events:
+        GoToCallback:
+          Type: Api
+          Properties:
+            Path: /auth/google/callback
+            Method: GET
+        GoToCallback:
+          Type: Api
+          Properties:
+            Path: /create-space
+            Method: GET
+        RegisterUser:
+          Type: Api
+          Properties:
+            Path: /meet-register
+            Method: POST
+        Intro:
+          Type: Api
+          Properties:
+            Path: /
+            Method: GET
