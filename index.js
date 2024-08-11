@@ -150,7 +150,7 @@ app.get('/create-space', async (req, res) => {
       return;
     }
     const meetingUri = await createSpace(authClient);
-    res.json({ "username": BOT_NAME, "response_type": "in_channel", "text": meetingUri });
+    res.send({ "username": BOT_NAME, "response_type": "in_channel", "text": meetingUri });
   } catch (error) {
     console.error(error);
     res.send({ "username": BOT_NAME, "text": "Error creating meeting space" });
