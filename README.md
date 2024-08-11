@@ -10,6 +10,7 @@ A simple API that Authorises Mattermost user's to Google Meet to generate Meet L
 - Support for Multiple user authentication and Meet generation
 - Versatile API that generates Meet Links on the fly using GoogleAPIs
 - Secure Handling of User Access tokens with ephemeral updates to Mattermost's user journey.
+- Deploy as a Function as a Service using `AWS Lambda`. 
 
 # Setup
 - Create your custom slash commands and add them to Mattermost. [Follow this guide](https://developers.mattermost.com/integrate/slash-commands/custom/)
@@ -19,7 +20,6 @@ A simple API that Authorises Mattermost user's to Google Meet to generate Meet L
 - _When configuring your credentials, create one for a web application. Since this an express application_
 
 # Future
-- Convert this into a function as a service.
 - Tag users when creating a meet link, to let them know to join the call.
 - Create future dated meet links.
 - Create calendar events.
