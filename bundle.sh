@@ -2,10 +2,15 @@
 
 # Define the name of the zip file
 ZIP_FILE="bundle.zip"
-NODE_JS_FOLDER="nodejs" 
+NODE_JS_FOLDER="nodejs.zip" 
+# check if the zip file already exists
+if [ -f $ZIP_FILE ]; then
+  echo "Removing existing $ZIP_FILE file..."
+  rm $ZIP_FILE
+fi
 # Create the zip file excluding node_modules and .vscode directories
-zip -r $ZIP_FILE . -x "node_modules/*" ".vscode/*" ".git/*" "credentials_org.json" "bundle.sh" "package.json" "package-lock.json"
+zip -r $ZIP_FILE . .env credentials.json index.js template.yml token.json
 
 echo "Files have been bundled into $ZIP_FILE, excluding node_modules and .vscode directories."
 
-zip -r $NODE_JS_FOLDER "node_modules/*" "package.json" "package-lock.json"
+zip -r $NODE_JS_FOLDER nodejs
