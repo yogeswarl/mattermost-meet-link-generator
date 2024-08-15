@@ -16,6 +16,7 @@
   "dependencies": {
     "@google-apps/meet": "^0.3.0",
     "@google-cloud/local-auth": "^2.1.0",
+    "aws-sdk": "^2.1674.0",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "googleapis": "^140.0.1",

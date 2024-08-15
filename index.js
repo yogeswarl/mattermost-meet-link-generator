@@ -10,6 +10,11 @@ const { auth } = require('google-auth-library');
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 const serverless = require('serverless-http')
 const app = express();
+const AWS = require('aws-sdk');
+AWS.config.update({ region: 'ca-central-1',
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY });
+const dynamodb = new AWS.DynamoDB.DocumentClient();
 const PORT = process.env.PORT || 3000;
 
 dotenv.config();
@@ -18,7 +23,8 @@ dotenv.config();
 const BOT_NAME = 'google-meet-generator';
 const tokenTypeToTokenMap = {
   CALL: process.env.MM_CALL_HANDLER_TOKEN,
-  REGISTER: process.env.MM_REGISTER_TOKEN
+  REGISTER: process.env.MM_REGISTER_TOKEN,
+  DB_NAME: process.env.TABLE_NAME
 }
 
 // If modifying these scopes, delete token.json.
@@ -28,7 +34,6 @@ app.use(express.urlencoded({ extended: true }));
 // The file token.json stores the user's access and refresh tokens, and is
 // created automatically when the authorization flow completes for the first
 // time.
-const TOKEN_PATH = path.join(process.cwd(), 'token.json');
 const CREDENTIALS_PATH = path.join(process.cwd(), 'credentials.json');
 let keys = { redirect_uris: [''] };
 if (fs.existsSync(CREDENTIALS_PATH)) {
@@ -47,13 +52,15 @@ const oauth2Client = new google.auth.OAuth2(
  */
 async function loadSavedCredentialsIfExist(userId) {
   try {
-    const content = await fsPromise.readFile(TOKEN_PATH);
-    const tokens = JSON.parse(content);
-    if (tokens[userId]) {
-      const parsedUser = JSON.parse(tokens[userId]);
-      return auth.fromJSON(parsedUser);
+    const params = {
+      TableName: tokenTypeToTokenMap.DB_NAME,
+      Key: { user_id: userId }
+    };
+    const result = await dynamodb.get(params).promise();
+    if (result.Item && result.Item.credentials) {
+      return auth.fromJSON(result.Item.credentials);
     }
-    return null
+    return null;
   } catch (err) {
     console.log(err);
     return null;
@@ -85,13 +92,30 @@ async function saveCredentials(client, userId) {
   });
   let tokens = {};
   try {
-    const content = await fsPromise.readFile(TOKEN_PATH);
-    tokens = JSON.parse(content);
+    const params = {
+      TableName: tokenTypeToTokenMap.DB_NAME,
+      Key :{user_id: userId}
+    }
+    const result = await dynamodb.get(params).promise();
+    tokens = result.Item || {};
   } catch (err) {
     console.log('No Existing tokens file, creating a new one.');
   }
   tokens[userId] = payload;
-  await fsPromise.writeFile(TOKEN_PATH, JSON.stringify(tokens));
+
+  const putParams = {
+    TableName: tokenTypeToTokenMap.DB_NAME,
+    Item: {
+      user_id: userId,
+      credentials: payload
+    }
+  }
+  try {
+    await dynamodb.put(putParams).promise();
+    console.log(`Successfully stored token for user_id: ${userId}`);
+  } catch (err) {
+    console.error(`Failed to store token for user_id: ${userId}`, err);
+  }
 }
 
 /**
@@ -201,14 +225,14 @@ const handler = serverless(app);
 /*
 Uncomment this part to run the server locally
 */
-// app.listen(PORT, () => {
-//   console.log(`Server is running on port ${PORT}`);
-// });
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
 
 /*
 Use this part for running the server on AWS Lambda
 */
-module.exports.handler = async (event, context) => {
-  context.callbackWaitsForEmptyEventLoop = false;
-  return await handler(event, context);
-};
+// module.exports.handler = async (event, context) => {
+//   context.callbackWaitsForEmptyEventLoop = false;
+//   return await handler(event, context);
+// };
